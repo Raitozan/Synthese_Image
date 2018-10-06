@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Synthese_Image
 {
-    enum MaterialType { Diffuse, Mirror };
+    enum MaterialType { Difuse, Mirror, Light};
 
     class Material
     {

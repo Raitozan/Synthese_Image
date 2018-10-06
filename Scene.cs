@@ -9,63 +9,75 @@ namespace Synthese_Image
 {
     class Scene
     {
+        public string name;
         public Sphere[] spheres;
         public Camera camera;
         public Light light;
 
-        public Scene(Sphere[] s, Camera c, Light l)
+        public Scene(string n, Sphere[] s, Camera c, Light l)
         {
+            name = n;
             spheres = s;
             camera = c;
             light = l;
         }
 
-        public void DrawScene(Scene scene)
+        public void DrawScene()
         {
-            Vector3[,] pixMat = new Vector3[scene.camera.width, scene.camera.height];
+            Vector3[,] pixMat = new Vector3[camera.width, camera.height];
 
-            for (int y = 0; y < scene.camera.height; y++)
+            for (int y = 0; y < camera.height; y++)
             {
-                for (int x = 0; x < scene.camera.width; x++)
+                for (int x = 0; x < camera.width; x++)
                 {
-                    Vector3 start = new Vector3(scene.camera.center.X + x, scene.camera.center.Y + y, scene.camera.center.Z);
-                    Vector3 direction = Vector3.Subtract(start, scene.camera.focus);
+                    Vector3 start = new Vector3(camera.center.X + x, camera.center.Y + y, camera.center.Z);
+                    Vector3 direction = Vector3.Subtract(start, camera.focus);
                     direction = Vector3.Normalize(direction);
                     Ray r = new Ray(start, direction);
 
-                    pixMat[x, y] = Radiance(r, scene);
+                    pixMat[x, y] = Radiance(r, 0);
                 }
             }
-            ImagePPM img = new ImagePPM("Scene", scene.camera.width, scene.camera.height).FromMatrix(pixMat);
+            ImagePPM img = new ImagePPM(name, camera.width, camera.height).FromMatrix(pixMat);
             img.ToPPM();
         }
 
-        public Vector3 Radiance(Ray ray, Scene scene)
+        public Vector3 Radiance(Ray ray, int stop)
         {
             Vector3 color = new Vector3(0, 0, 0);
 
-            ResIntersect resInter = Intersects(ray, scene);
-            if (resInter.t != -1)
-            {
-                Vector3 interPoint = Vector3.Add(ray.point, Vector3.Multiply(ray.direction, 0.99999f * resInter.t));
-                switch (resInter.sph.material.type)
-                {
-                    case MaterialType.Diffuse:
-                        Vector3 directionToLight = Vector3.Subtract(scene.light.origin, interPoint);
-                        ray = new Ray(interPoint, directionToLight);
-                        ResIntersect resInterL = Intersects(ray, scene);
-                        if (!(resInterL.t != -1 && resInterL.t <= 1.0f))
-                            color = ReceiveLight(scene.light, interPoint, resInter.sph);
-                        break;
-                    case MaterialType.Mirror:
-                        Vector3 normal = Vector3.Subtract(interPoint, resInter.sph.center);
-                        normal = Vector3.Normalize(normal);
-                        Vector3 newDir = Vector3.Add(Vector3.Multiply(2*-Vector3.Dot(ray.direction, normal), normal), ray.direction);
-                        Ray reflection = new Ray(interPoint, newDir);
-                        color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, scene));
-                        break;
-                }
-            }
+			if(stop != 100)
+			{
+				ResIntersect resInter = Intersects(ray);
+				if (resInter.t != -1)
+				{
+					Vector3 interPoint = Vector3.Add(ray.point, Vector3.Multiply(ray.direction, resInter.t));
+					Vector3 normal = Vector3.Subtract(interPoint, resInter.sph.center);
+					normal = Vector3.Normalize(normal);
+					interPoint = Vector3.Add(interPoint, Vector3.Multiply(normal, 0.1f));
+
+					switch (resInter.sph.material.type)
+					{
+						case MaterialType.Difuse:
+							Vector3 directionToLight = Vector3.Subtract(light.origin, interPoint);
+							ray = new Ray(interPoint, directionToLight);
+							ResIntersect resInterL = Intersects(ray);
+							if (!(resInterL.t != -1 && resInterL.t <= 1.0f && resInterL.sph.material.type != MaterialType.Light))
+								color = ReceiveLight(light, interPoint, resInter.sph);
+							else
+								color = Vector3.Multiply(ReceiveLight(light, interPoint, resInter.sph), 0.001f);
+							break;
+						case MaterialType.Mirror:
+							Vector3 newDir = Vector3.Add(Vector3.Multiply(2 * -Vector3.Dot(ray.direction, normal), normal), ray.direction);
+							Ray reflection = new Ray(interPoint, newDir);
+							color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, ++stop));
+							break;
+						case MaterialType.Light:
+							color = resInter.sph.material.albedo;
+							break;
+					}
+				}
+			}
 
             return color;
         }
@@ -75,12 +87,12 @@ namespace Synthese_Image
             public float t;
             public Sphere sph;
         }
-        public ResIntersect Intersects(Ray r, Scene scene)
+        public ResIntersect Intersects(Ray r)
         {
             ResIntersect res;
             res.t = -1;
             res.sph = null;
-            foreach (Sphere s in scene.spheres)
+            foreach (Sphere s in spheres)
             {
                 float inter = Intersect(r, s);
                 if (inter != -1)
