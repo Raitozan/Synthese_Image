@@ -11,13 +11,13 @@ namespace Synthese_Image
     {
         public Vector3 center;
         public float radius;
-        public Vector3 albedo;
+        public Material material;
 
-        public Sphere(Vector3 c, float r, Vector3 a)
+        public Sphere(Vector3 c, float r, Material m)
         {
             center = c;
             radius = r;
-            albedo = a;
+            material = m;
         }
     }
 }
