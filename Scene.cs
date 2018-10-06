@@ -47,10 +47,10 @@ namespace Synthese_Image
             ResIntersect resInter = Intersects(ray, scene);
             if (resInter.t != -1)
             {
+                Vector3 interPoint = Vector3.Add(ray.point, Vector3.Multiply(ray.direction, 0.99999f * resInter.t));
                 switch (resInter.sph.material.type)
                 {
                     case MaterialType.Diffuse:
-                        Vector3 interPoint = Vector3.Add(ray.point, Vector3.Multiply(ray.direction, 0.99999f * resInter.t));
                         Vector3 directionToLight = Vector3.Subtract(scene.light.origin, interPoint);
                         ray = new Ray(interPoint, directionToLight);
                         ResIntersect resInterL = Intersects(ray, scene);
@@ -58,6 +58,11 @@ namespace Synthese_Image
                             color = ReceiveLight(scene.light, interPoint, resInter.sph);
                         break;
                     case MaterialType.Mirror:
+                        Vector3 normal = Vector3.Subtract(interPoint, resInter.sph.center);
+                        normal = Vector3.Normalize(normal);
+                        Vector3 newDir = Vector3.Add(Vector3.Multiply(2*-Vector3.Dot(ray.direction, normal), normal), ray.direction);
+                        Ray reflection = new Ray(interPoint, newDir);
+                        color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, scene));
                         break;
                 }
             }
