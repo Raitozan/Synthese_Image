@@ -50,19 +50,19 @@ namespace Synthese_Image
 
 			//===================================================================================================================================================
 
-			Sphere[] sphL = { light, leftWall, rightWall, topWall, bottomWall, backWall2, frontWall2, sDown, sUp, sLeft, sRight, sLeftDown, sLeftUp, sRightDown, sRightUp};
+			Sphere[] sphL = { light, leftWall, rightWall, topWall, bottomWall, backWall, frontWall, sDown, sUp, sLeft, sRight, sLeftDown, sLeftUp, sRightDown, sRightUp};
 			Sphere[] sphL2 = { light2, leftWall2, rightWall2, topWall2, bottomWall2, backWall2, frontWall2, sph};
 
 			Camera cam = new Camera(new Vector3(0, 0, 0), 1280, 720, new Vector3(640, 360, -1000));
 
-			Light lgt = new Light(new Vector3(640, 360, 500), new Vector3(1000000, 1000000, 1000000));
+			Light lgt = new Light(new Vector3(640, 360, 500), new Vector3(10000000, 10000000, 10000000));
 			Light lgt2 = new Light(new Vector3(640, 50, 500), new Vector3(1000000, 1000000, 1000000));
 
 			Scene scn = new Scene("Scene", sphL, cam, lgt);
 			Scene scn2 = new Scene("MirrorCeption", sphL2, cam, lgt2);
 
 			scn.DrawScene();
-			scn2.DrawScene();
+			//scn2.DrawScene();
 		}
 	}
 }

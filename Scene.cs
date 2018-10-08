@@ -13,9 +13,12 @@ namespace Synthese_Image
 		public Sphere[] spheres;
 		public Camera camera;
 		public Light light;
+		public Random r;
 
 		public Scene(string n, Sphere[] s, Camera c, Light l)
 		{
+
+			r = new Random();
 			name = n;
 			spheres = s;
 			camera = c;
@@ -46,7 +49,7 @@ namespace Synthese_Image
 		{
 			Vector3 color = new Vector3(0, 0, 0);
 
-			if (stop != 100)
+			if (stop != 10)
 			{
 				ResIntersect resInter = Intersects(ray);
 				if (resInter.t != -1)
@@ -55,21 +58,24 @@ namespace Synthese_Image
 					Vector3 normal = Vector3.Subtract(interPoint, resInter.sph.center);
 					normal = Vector3.Normalize(normal);
 					interPoint = Vector3.Add(interPoint, Vector3.Multiply(normal, 0.1f));
-
+					Vector3 newDir;
+					Ray reflection;
 					switch (resInter.sph.material.type)
 					{
 						case MaterialType.Difuse:
 							Vector3 directionToLight = Vector3.Subtract(light.origin, interPoint);
 							ray = new Ray(interPoint, directionToLight);
 							ResIntersect resInterL = Intersects(ray);
+							Vector3 powerR = new Vector3(0.0f, 0.0f, 0.0f);
 							if (!(resInterL.t != -1 && resInterL.t <= 1.0f && resInterL.sph.material.type != MaterialType.Light))
-								color = ReceiveLight(light, interPoint, resInter.sph);
-							else
-								color = Vector3.Multiply(ReceiveLight(light, interPoint, resInter.sph), 0.001f);
+								powerR = powerReceived(interPoint);
+							newDir = randomDirection(interPoint, normal);
+							reflection = new Ray(interPoint, newDir);
+							color = Vector3.Multiply(lightEmmited(newDir, normal, resInter.sph), Vector3.Add(powerR, Radiance(reflection, ++stop)));
 							break;
 						case MaterialType.Mirror:
-							Vector3 newDir = Vector3.Add(Vector3.Multiply(2 * -Vector3.Dot(ray.direction, normal), normal), ray.direction);
-							Ray reflection = new Ray(interPoint, newDir);
+							newDir = Vector3.Add(Vector3.Multiply(2 * -Vector3.Dot(ray.direction, normal), normal), ray.direction);
+							reflection = new Ray(interPoint, newDir);
 							color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, ++stop));
 							break;
 						case MaterialType.Light:
@@ -128,23 +134,37 @@ namespace Synthese_Image
 			}
 		}
 
-		public Vector3 ReceiveLight(Light light, Vector3 interPoint, Sphere sphere)
+		public Vector3 powerReceived(Vector3 directionToLight)
 		{
-			Vector3 l = Vector3.Subtract(light.origin, interPoint);
-			float dist = l.Length();
-			l = Vector3.Normalize(l);
-			Vector3 n = Vector3.Subtract(interPoint, sphere.center);
-			n = Vector3.Normalize(n);
+			float dist = directionToLight.Length();
 
-			Vector3 powerReceived = Vector3.Multiply(light.power, 1 / (dist * dist));
-			Vector3 lightEmmited = Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Vector3.Dot(n,l), 0.0f, 1.0f)), (float)Math.PI);
+			return Vector3.Multiply(light.power, 1 / (dist * dist));
+		}
 
-			return Vector3.Multiply(powerReceived, lightEmmited);
+		public Vector3 lightEmmited(Vector3 rayDir, Vector3 sphNormal, Sphere sphere)
+		{
+			return Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Math.Abs(Vector3.Dot(sphNormal, rayDir)), 0.0f, 1.0f)), (float)Math.PI);
 		}
 
 		public float Clamp(float v, float min, float max)
 		{
 			return Math.Max(Math.Min(v, max), min);
+		}
+
+		public Vector3 randomDirection(Vector3 interPoint, Vector3 sphNormal)
+		{
+			Vector3 newDir;
+			double r1 = r.NextDouble();
+			double r2 = r.NextDouble();
+			float x = (float)(interPoint.X + 2 * Math.Cos(2 * Math.PI * r1) * Math.Sqrt(r2 * (1 - r2)));
+			float y = (float)(interPoint.Y + 2 * Math.Sin(2 * Math.PI * r1) * Math.Sqrt(r2 * (1 - r2)));
+			float z = (float)(interPoint.Z + (1 - 2 * r2));
+			newDir = new Vector3(x, y, z);
+			newDir = Vector3.Subtract(interPoint, newDir);
+			if (Vector3.Dot(sphNormal, newDir) < 0.0f)
+				newDir = -newDir;
+
+			return newDir;
 		}
 	}
 }
