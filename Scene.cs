@@ -137,9 +137,14 @@ namespace Synthese_Image
 			n = Vector3.Normalize(n);
 
 			Vector3 powerReceived = Vector3.Multiply(light.power, 1 / (dist * dist));
-			Vector3 lightEmmited = Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Math.Max(Math.Min(Vector3.Dot(n, l), 1.0f), 0.0f)), (float)Math.PI);
+			Vector3 lightEmmited = Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Vector3.Dot(n,l), 0.0f, 1.0f)), (float)Math.PI);
 
 			return Vector3.Multiply(powerReceived, lightEmmited);
+		}
+
+		public float Clamp(float v, float min, float max)
+		{
+			return Math.Max(Math.Min(v, max), min);
 		}
 	}
 }

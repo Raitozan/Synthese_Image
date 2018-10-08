@@ -45,8 +45,7 @@ namespace Synthese_Image
 		public void ToPPM()
 		{
 			string path = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-			Debug.Print(path);
-			using (StreamWriter writer = new StreamWriter("C:\\Users\\natha\\Desktop\\Gamagora\\Synthese_Image\\" + name + ".ppm"))
+			using (StreamWriter writer = new StreamWriter(path + "\\" + name + ".ppm"))
 			{
 				writer.WriteLine("P3");
 				writer.WriteLine(width.ToString() + " " + height.ToString());
@@ -61,7 +60,7 @@ namespace Synthese_Image
 					}
 					writer.WriteLine(line);
 				}
-				System.Diagnostics.Process.Start("C:\\Users\\natha\\Desktop\\Gamagora\\Synthese_Image\\" + name + ".ppm");
+				System.Diagnostics.Process.Start(path + "\\" + name + ".ppm");
 			}
 		}
 	}
