@@ -7,17 +7,17 @@ using System.Numerics;
 
 namespace Synthese_Image
 {
-    enum MaterialType { Difuse, Mirror, Light};
+	enum MaterialType { Difuse, Mirror, Light };
 
-    class Material
-    {
-        public MaterialType type;
-        public Vector3 albedo;
+	class Material
+	{
+		public MaterialType type;
+		public Vector3 albedo;
 
-        public Material(MaterialType t, Vector3 a)
-        {
-            type = t;
-            albedo = a;
-        }
-    }
+		public Material(MaterialType t, Vector3 a)
+		{
+			type = t;
+			albedo = a;
+		}
+	}
 }
