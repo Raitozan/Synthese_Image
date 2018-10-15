@@ -13,19 +13,19 @@ namespace Synthese_Image
 		public Sphere[] spheres;
 		public Camera camera;
 		public Light light;
-		public Random r;
+		public Random rdm;
 
 		public Scene(string n, Sphere[] s, Camera c, Light l)
 		{
 
-			r = new Random();
+			rdm = new Random();
 			name = n;
 			spheres = s;
 			camera = c;
 			light = l;
 		}
 
-		public void DrawScene()
+		public void DrawScene(int rayCastNb)
 		{
 			Vector3[,] pixMat = new Vector3[camera.width, camera.height];
 
@@ -33,23 +33,29 @@ namespace Synthese_Image
 			{
 				for (int x = 0; x < camera.width; x++)
 				{
-					Vector3 start = new Vector3(camera.center.X + x, camera.center.Y + y, camera.center.Z);
-					Vector3 direction = Vector3.Subtract(start, camera.focus);
-					direction = Vector3.Normalize(direction);
-					Ray r = new Ray(start, direction);
+					Vector3 color = new Vector3(0, 0, 0);
 
-					pixMat[x, y] = Radiance(r, 0);
+					for (int i = 0; i < rayCastNb; i++)
+					{
+						Vector3 start = new Vector3(camera.center.X + x + (float)(rdm.NextDouble()-0.5), camera.center.Y + y + (float)(rdm.NextDouble()-0.5), camera.center.Z);
+						Vector3 direction = Vector3.Subtract(start, camera.focus);
+						direction = Vector3.Normalize(direction);
+						Ray r = new Ray(start, direction);
+						color = Vector3.Add(color, Radiance(r, 0));
+					}
+
+					pixMat[x, y] = Vector3.Divide(color, rayCastNb);
 				}
 			}
 			ImagePPM img = new ImagePPM(name, camera.width, camera.height).FromMatrix(pixMat);
 			img.ToPPM();
 		}
 
-		public Vector3 Radiance(Ray ray, int stop)
+		public Vector3 Radiance(Ray ray, int rebound)
 		{
 			Vector3 color = new Vector3(0, 0, 0);
 
-			if (stop != 10)
+			if (rebound != 5)
 			{
 				ResIntersect resInter = Intersects(ray);
 				if (resInter.t != -1)
@@ -66,17 +72,18 @@ namespace Synthese_Image
 							Vector3 directionToLight = Vector3.Subtract(light.origin, interPoint);
 							ray = new Ray(interPoint, directionToLight);
 							ResIntersect resInterL = Intersects(ray);
-							Vector3 powerR = new Vector3(0.0f, 0.0f, 0.0f);
+							Vector3 powerRec = new Vector3(0.0f, 0.0f, 0.0f);
 							if (!(resInterL.t != -1 && resInterL.t <= 1.0f && resInterL.sph.material.type != MaterialType.Light))
-								powerR = powerReceived(interPoint);
-							newDir = randomDirection(interPoint, normal);
+								powerRec = powerReceived(directionToLight);
+							newDir = transformToNewONBase(randomDirectionOnHemisphere(), NewONBase(normal));
 							reflection = new Ray(interPoint, newDir);
-							color = Vector3.Multiply(lightEmmited(newDir, normal, resInter.sph), Vector3.Add(powerR, Radiance(reflection, ++stop)));
+							color = Vector3.Add(Vector3.Multiply(powerRec,                        lightEmmited(Vector3.Normalize(directionToLight), normal, resInter.sph)),
+												Vector3.Multiply(Radiance(reflection, ++rebound), lightEmmited(newDir, normal, resInter.sph)));
 							break;
 						case MaterialType.Mirror:
 							newDir = Vector3.Add(Vector3.Multiply(2 * -Vector3.Dot(ray.direction, normal), normal), ray.direction);
 							reflection = new Ray(interPoint, newDir);
-							color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, ++stop));
+							color = Vector3.Multiply(resInter.sph.material.albedo, Radiance(reflection, ++rebound));
 							break;
 						case MaterialType.Light:
 							color = resInter.sph.material.albedo;
@@ -143,7 +150,7 @@ namespace Synthese_Image
 
 		public Vector3 lightEmmited(Vector3 rayDir, Vector3 sphNormal, Sphere sphere)
 		{
-			return Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Math.Abs(Vector3.Dot(sphNormal, rayDir)), 0.0f, 1.0f)), (float)Math.PI);
+			return Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Vector3.Dot(sphNormal, rayDir), 0.0f, 1.0f)), (float)Math.PI);
 		}
 
 		public float Clamp(float v, float min, float max)
@@ -151,20 +158,43 @@ namespace Synthese_Image
 			return Math.Max(Math.Min(v, max), min);
 		}
 
-		public Vector3 randomDirection(Vector3 interPoint, Vector3 sphNormal)
+		public Vector3 randomDirectionOnHemisphere()
 		{
-			Vector3 newDir;
-			double r1 = r.NextDouble();
-			double r2 = r.NextDouble();
-			float x = (float)(interPoint.X + 2 * Math.Cos(2 * Math.PI * r1) * Math.Sqrt(r2 * (1 - r2)));
-			float y = (float)(interPoint.Y + 2 * Math.Sin(2 * Math.PI * r1) * Math.Sqrt(r2 * (1 - r2)));
-			float z = (float)(interPoint.Z + (1 - 2 * r2));
-			newDir = new Vector3(x, y, z);
-			newDir = Vector3.Subtract(interPoint, newDir);
-			if (Vector3.Dot(sphNormal, newDir) < 0.0f)
-				newDir = -newDir;
+			Vector3 rdmDir;
+			double r1 = rdm.NextDouble();
+			double r2 = rdm.NextDouble();
 
-			return newDir;
+			float x = (float)(Math.Cos(2 * Math.PI * r1) * Math.Sqrt(1 - r2));
+			float y = (float)(Math.Sin(2 * Math.PI * r1) * Math.Sqrt(1 - r2));
+			float z = (float)(Math.Sqrt(r2));
+			rdmDir = new Vector3(x, y, z);
+
+			return rdmDir;
+		}
+
+		public struct OrthonormalBase
+		{
+			public Vector3 x;
+			public Vector3 y;
+			public Vector3 z;
+		}
+		public OrthonormalBase NewONBase(Vector3 zNormal)
+		{
+			OrthonormalBase newBase;
+
+			Vector3 randomDir = new Vector3((float)(rdm.NextDouble() - 0.5f), (float)(rdm.NextDouble() - 0.5f), (float)(rdm.NextDouble() - 0.5f));
+			randomDir = Vector3.Normalize(randomDir);
+
+			newBase.x = Vector3.Normalize(Vector3.Cross(zNormal, randomDir));
+			newBase.y = Vector3.Cross(zNormal, newBase.x);
+			newBase.z = zNormal;
+
+			return newBase;
+		}
+
+		public Vector3 transformToNewONBase(Vector3 dir, OrthonormalBase newBase)
+		{
+			return Vector3.Add(Vector3.Add(Vector3.Multiply(dir.X, newBase.x), Vector3.Multiply(dir.Y, newBase.y)), Vector3.Multiply(dir.Z, newBase.z));
 		}
 	}
 }

@@ -23,16 +23,12 @@ namespace Synthese_Image
 			Sphere frontWall = new Sphere(new Vector3(640, 360, (float)-1e5), (float)1e5, new Material(MaterialType.Difuse, new Vector3(1, 0.1f, 1)));
 
 			Sphere sLeft = new Sphere(new Vector3(100, 360, 100), 100, new Material(MaterialType.Difuse, new Vector3(0.1f, 1, 0.1f)));
-
-			Sphere sLeftDown = new Sphere(new Vector3(370, 490, 300), 50, new Material(MaterialType.Mirror, new Vector3(1, 1, 0.1f)));
-			Sphere sLeftUp = new Sphere(new Vector3(370, 230, 300), 50, new Material(MaterialType.Mirror, new Vector3(1, 0.1f, 0.1f)));
-
+			Sphere sLeftDown = new Sphere(new Vector3(370, 490, 300), 50, new Material(MaterialType.Mirror, new Vector3(1, 1, 1)));
+			Sphere sLeftUp = new Sphere(new Vector3(370, 230, 300), 50, new Material(MaterialType.Mirror, new Vector3(1, 1, 1)));
 			Sphere sDown = new Sphere(new Vector3(640, 620, 500), 100, new Material(MaterialType.Difuse, new Vector3(0.1f, 1, 1)));
 			Sphere sUp = new Sphere(new Vector3(640, 100, 500), 100, new Material(MaterialType.Difuse, new Vector3(1, 1, 0.1f)));
-
-			Sphere sRightDown = new Sphere(new Vector3(910, 490, 700), 50, new Material(MaterialType.Mirror, new Vector3(0.1f, 1, 0.1f)));
-			Sphere sRightUp = new Sphere(new Vector3(910, 230, 700), 50, new Material(MaterialType.Mirror, new Vector3(0.1f, 1, 1)));
-
+			Sphere sRightDown = new Sphere(new Vector3(910, 490, 700), 50, new Material(MaterialType.Mirror, new Vector3(1, 1, 1)));
+			Sphere sRightUp = new Sphere(new Vector3(910, 230, 700), 50, new Material(MaterialType.Mirror, new Vector3(1, 1, 1)));
 			Sphere sRight = new Sphere(new Vector3(1180, 360, 900), 100, new Material(MaterialType.Difuse, new Vector3(1, 0.1f, 0.1f)));
 
 			//===============SCENE=2=============================================================================================================================
@@ -54,14 +50,14 @@ namespace Synthese_Image
 			Sphere[] sphL2 = { light2, leftWall2, rightWall2, topWall2, bottomWall2, backWall2, frontWall2, sph};
 
 			Camera cam = new Camera(new Vector3(0, 0, 0), 1280, 720, new Vector3(640, 360, -1000));
-
-			Light lgt = new Light(new Vector3(640, 360, 500), new Vector3(10000000, 10000000, 10000000));
+		
+			Light lgt = new Light(new Vector3(640, 360, 500), new Vector3(1000000, 1000000, 1000000));
 			Light lgt2 = new Light(new Vector3(640, 50, 500), new Vector3(1000000, 1000000, 1000000));
 
 			Scene scn = new Scene("Scene", sphL, cam, lgt);
 			Scene scn2 = new Scene("MirrorCeption", sphL2, cam, lgt2);
 
-			scn.DrawScene();
+			scn.DrawScene(10);
 			//scn2.DrawScene();
 		}
 	}
