@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AABBox.cs" />
+    <Compile Include="AABBTree.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="ImagePPM.cs" />
     <Compile Include="Material.cs" />

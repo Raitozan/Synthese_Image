@@ -37,14 +37,20 @@ namespace Synthese_Image
 			Sphere light = new Sphere(new Vector3(640, 360, 500), 10, new Material(MaterialType.Light, new Vector3(1000000, 1000000, 1000000)));
 			Sphere light2 = new Sphere(new Vector3(100, 100, 100), 30, new Material(MaterialType.Light, new Vector3(1000000, 100000, 100000)));
 
-			Sphere[] sphL = { light, light2, leftWall, rightWall, topWall, bottomWall, backWall, frontWall, sDown, sUp, sLeft, sRight, sLeftDown, sLeftUp, sRightDown, sRightUp };
-			Sphere[] lgtL = { light, light2 };
+			Sphere[] spheres = { light, light2, sDown, sUp, sLeft, sRight, sLeftDown, sLeftUp, sRightDown, sRightUp };
+			List<Sphere> sphL = new List<Sphere>();
+			sphL.AddRange(spheres);
+			AABBTree spheresTree = new AABBTree(sphL);
+
+			Sphere[] bigSpheres = {leftWall, rightWall, topWall, bottomWall, backWall, frontWall };
+
+			Sphere[] lights = { light, light2 };
 
 			Camera cam = new Camera(new Vector3(0, 0, 0), 1280, 720, new Vector3(640, 360, -1000));
 
-			Scene scn = new Scene("Scene", sphL, lgtL, cam);
+			Scene scn = new Scene("Scene", spheresTree, bigSpheres, lights, cam);
 
-			scn.DrawScene(10);
+			scn.DrawScene(1);
 		}
 	}
 }

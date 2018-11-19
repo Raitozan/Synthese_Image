@@ -10,16 +10,18 @@ namespace Synthese_Image
 	class Scene
 	{
 		public string name;
-		public Sphere[] spheres;
+		public AABBTree spheresTree;
+		public Sphere[] bigSpheres;
 		public Sphere[] lights;
 		public Camera camera;
 		public Random rdm;
 
-		public Scene(string n, Sphere[] s, Sphere[] l, Camera c)
+		public Scene(string n, AABBTree t, Sphere[] bs, Sphere[] l, Camera c)
 		{
 			rdm = new Random();
 			name = n;
-			spheres = s;
+			spheresTree = t;
+			bigSpheres = bs;
 			lights = l;
 			camera = c;
 		}
@@ -54,7 +56,7 @@ namespace Synthese_Image
 		{
 			Vector3 color = new Vector3(0, 0, 0);
 
-			if (rebound != 5)
+			if (rebound != 2)
 			{
 				ResIntersect resInter = Intersects(ray);
 				if (resInter.t != -1)
@@ -95,43 +97,49 @@ namespace Synthese_Image
 		}
 		public ResIntersect Intersects(Ray r)
 		{
-			ResIntersect res;
-			res.t = -1;
-			res.sph = null;
-			foreach (Sphere s in spheres)
+			ResIntersect res = intersectTree(spheresTree, r);
+			foreach (Sphere s in bigSpheres)
 			{
-				float inter = Intersect(r, s);
-				if (inter != -1)
+				ResIntersect res2 = Intersect(r, s);
+				if (res2.t != -1)
 				{
-					if (res.t == -1 || inter < res.t)
+					if (res.t == -1 || res2.t < res.t)
 					{
-						res.t = inter;
-						res.sph = s;
+						res.t = res2.t;
+						res.sph = res2.sph;
 					}
 				}
 			}
 			return res;
 		}
 
-		public float Intersect(Ray r, Sphere s)
+		public ResIntersect Intersect(Ray r, Sphere s)
 		{
+			ResIntersect res;
+			res.t = -1;
+			res.sph = null;
+
 			float A = Vector3.Dot(r.direction, r.direction);
 			float B = 2 * (Vector3.Dot(r.point, r.direction) - Vector3.Dot(s.center, r.direction));
 			float C = Vector3.Dot(Vector3.Subtract(s.center, r.point), Vector3.Subtract(s.center, r.point)) - (s.radius * s.radius);
 			float D = B * B - 4 * A * C;
-			if (D < 0)
-				return -1.0f;
-			else
+			if(D >= 0)
 			{
 				float i1 = ((-B) + (float)Math.Sqrt(D)) / (2 * A);
 				float i2 = ((-B) - (float)Math.Sqrt(D)) / (2 * A);
 				if (i2 > 0)
-					return i2;
+				{
+					res.t = i2;
+					res.sph = s;
+				}
 				else if (i1 > 0)
-					return i1;
-				else
-					return -1.0f;
+				{
+					res.t = i1;
+					res.sph = s;
+				}
 			}
+
+			return res;
 		}
 
 		public Vector3 powerReceived(Vector3 directionToLight, Sphere light)
@@ -205,6 +213,80 @@ namespace Synthese_Image
 		public Vector3 transformToNewONBase(Vector3 dir, OrthonormalBase newBase)
 		{
 			return Vector3.Add(Vector3.Add(Vector3.Multiply(dir.X, newBase.x), Vector3.Multiply(dir.Y, newBase.y)), Vector3.Multiply(dir.Z, newBase.z));
+		}
+
+		public bool AABBoxIntersect(AABBox box, Ray r)
+		{
+			float txmin = (box.pmin.X - r.point.X) / r.direction.X;
+			float txmax = (box.pmax.X - r.point.X) / r.direction.X;
+
+			if(txmin > txmax)
+			{
+				float tmp = txmin;
+				txmin = txmax;
+				txmax = tmp;
+			}
+
+			float tymin = (box.pmin.Y - r.point.Y) / r.direction.Y;
+			float tymax = (box.pmax.Y - r.point.Y) / r.direction.Y;
+
+			if(tymin > tymax)
+			{
+				float tmp = tymin;
+				tymin = tymax;
+				tymax = tmp;
+			}
+
+			float tzmin = (box.pmin.Z - r.point.Z) / r.direction.Z;
+			float tzmax = (box.pmax.Z - r.point.Z) / r.direction.Z;
+
+			if (tzmin > tzmax)
+			{
+				float tmp = tzmin;
+				tzmin = tzmax;
+				tzmax = tmp;
+			}
+
+			if ((txmin > tymax) || (tymin > txmax))
+				return false;
+
+			if ((txmin > tzmax) || (tzmin > txmax))
+				return false;
+
+			return true;
+		}
+
+		public ResIntersect intersectTree(AABBTree tree, Ray r)
+		{
+			ResIntersect res;
+			res.t = -1;
+			res.sph = null;
+
+			if(tree.leaf)
+			{
+				res = Intersect(r, tree.sph);
+			}
+			else
+			{
+				if(AABBoxIntersect(tree.box, r))
+				{
+					ResIntersect res1 = intersectTree(tree.tree1, r);
+					ResIntersect res2 = intersectTree(tree.tree2, r);
+
+					if (res1.t != -1)
+						if (res2.t != -1)
+							if (res1.t < res2.t)
+								res = res1;
+							else
+								res = res2;
+						else
+							res = res1;
+					else if (res2.t != -1)
+						res = res2;
+				}
+			}
+
+			return res;
 		}
 	}
 }
