@@ -15,9 +15,7 @@ namespace Synthese_Image
 		public AABBox(Sphere s)
 		{
 			pmin = new Vector3(s.center.X - s.radius, s.center.Y - s.radius, s.center.Z - s.radius);
-			//Console.WriteLine(pmin.ToString());
 			pmax = new Vector3(s.center.X + s.radius, s.center.Y + s.radius, s.center.Z + s.radius);
-			//Console.WriteLine(pmax.ToString());
 		}
 
 		public AABBox(AABBox b1, AABBox b2)
@@ -36,6 +34,11 @@ namespace Synthese_Image
 				pmax.Y = b2.pmax.Y;
 			if (pmax.Z < b2.pmax.Z)
 				pmax.Z = b2.pmax.Z;
+		}
+
+		public float getSurface()
+		{
+			return ((pmax.X - pmin.X) * (pmax.Y - pmin.Y) * 2) + ((pmax.X - pmin.X) * (pmax.Z - pmin.Z) * 2) + ((pmax.Y - pmin.Y) * (pmax.Z - pmin.Z) * 2);
 		}
 	}
 }

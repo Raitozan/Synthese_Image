@@ -41,11 +41,14 @@ namespace Synthese_Image
 			List<Sphere> sphL = new List<Sphere>();
 			sphL.AddRange(spheres);
 			Random rdm = new Random();
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < 100; i++)
 			{
 				sphL.Add(new Sphere(new Vector3((float)(rdm.NextDouble() * 1280), (float)(rdm.NextDouble() * 720), (float)(rdm.NextDouble() * 1000)), (float)((rdm.NextDouble()*15)+5), new Material(MaterialType.Difuse, new Vector3((float)(rdm.NextDouble()), (float)(rdm.NextDouble()), (float)(rdm.NextDouble())))));
 			}
-			AABBTree spheresTree = new AABBTree(sphL);
+			AABBox parentBox = new AABBox(sphL[0]);
+			for (int i = 1; i < sphL.Count; i++)
+				parentBox = new AABBox(parentBox, new AABBox(sphL[i]));
+			AABBTree spheresTree = new AABBTree(sphL, parentBox);
 
 			Sphere[] bigSpheres = { leftWall, rightWall, topWall, bottomWall, backWall, frontWall};
 
@@ -55,7 +58,7 @@ namespace Synthese_Image
 
 			Scene scn = new Scene("Scene", spheresTree, bigSpheres, lights, cam);
 
-			scn.DrawScene(5);
+			scn.DrawScene(10);
 		}
 	}
 }

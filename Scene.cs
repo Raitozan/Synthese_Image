@@ -26,6 +26,9 @@ namespace Synthese_Image
 			camera = c;
 		}
 
+		//======================================================================================================================
+		//==            DRAW SCENE - créer un image ppm de la scene actuelle, lance les rayons etc.                           ==
+		//======================================================================================================================
 		public void DrawScene(int rayCastNb)
 		{
 			Vector3[,] pixMat = new Vector3[camera.width, camera.height];
@@ -52,6 +55,9 @@ namespace Synthese_Image
 			img.ToPPM();
 		}
 
+		//======================================================================================================================
+		//==            RADIANCE - lance un rayon dans la scene et renvoi la couleur obtenue                                  ==
+		//======================================================================================================================
 		public Vector3 Radiance(Ray ray, int rebound)
 		{
 			Vector3 color = new Vector3(0, 0, 0);
@@ -90,6 +96,9 @@ namespace Synthese_Image
 			return color;
 		}
 
+		//======================================================================================================================
+		//==            INTERSECTS - test l'intersection du rayon r avec toute la scene, renvoi la plus proche                ==
+		//======================================================================================================================
 		public struct ResIntersect
 		{
 			public float t;
@@ -113,6 +122,9 @@ namespace Synthese_Image
 			return res;
 		}
 
+		//======================================================================================================================
+		//==            INTERSECT - l'intersection rayon/sphere                                                               ==
+		//======================================================================================================================
 		public ResIntersect Intersect(Ray r, Sphere s)
 		{
 			ResIntersect res;
@@ -142,6 +154,9 @@ namespace Synthese_Image
 			return res;
 		}
 
+		//======================================================================================================================
+		//==            POWER RECEIVED - renvoi la puissance de lumière reçue selon la distance                               ==
+		//======================================================================================================================
 		public Vector3 powerReceived(Vector3 directionToLight, Sphere light)
 		{
 			float dist = directionToLight.Length();
@@ -149,16 +164,25 @@ namespace Synthese_Image
 			return Vector3.Multiply(light.material.albedo, 1 / (dist * dist));
 		}
 
+		//======================================================================================================================
+		//==            LIGHT EMMITED - renvoi la puissance de lumière reçue selon l'angle du rayon par rapport à la surface  ==
+		//======================================================================================================================
 		public Vector3 lightEmmited(Vector3 rayDir, Vector3 sphNormal, Sphere sphere)
 		{
 			return Vector3.Divide(Vector3.Multiply(sphere.material.albedo, Clamp(Vector3.Dot(sphNormal, rayDir), 0.0f, 1.0f)), (float)Math.PI);
 		}
 
+		//======================================================================================================================
+		//==            CLAMP - clamping de v entre min et max                                                                ==
+		//======================================================================================================================
 		public float Clamp(float v, float min, float max)
 		{
 			return Math.Max(Math.Min(v, max), min);
 		}
 
+		//======================================================================================================================
+		//==            DIRECT LIGHTING - renvoi la lumière directe reçue au point d'intersection du rayon                    ==
+		//======================================================================================================================
 		public Vector3 directLighting(Vector3 interPoint, Vector3 normal, ResIntersect resInter)
 		{
 			Vector3 directLight = new Vector3(0.0f, 0.0f, 0.0f);
@@ -176,6 +200,9 @@ namespace Synthese_Image
 			return directLight;
 		}
 
+		//======================================================================================================================
+		//==            RANDOM DIRECTION ON HEMISPHERE - renvoi une direction aléatoire sur un hémisphere                     ==
+		//======================================================================================================================
 		public Vector3 randomDirectionOnHemisphere()
 		{
 			Vector3 rdmDir;
@@ -190,6 +217,9 @@ namespace Synthese_Image
 			return rdmDir;
 		}
 
+		//======================================================================================================================
+		//==            NEW ORTHONORMAL BASE - renvoi une nouvelle base grâce à une normale                                   ==
+		//======================================================================================================================
 		public struct OrthonormalBase
 		{
 			public Vector3 x;
@@ -210,11 +240,17 @@ namespace Synthese_Image
 			return newBase;
 		}
 
+		//======================================================================================================================
+		//==            TRANSFORM TO NEW ORTHONORMAL BASE - "rotationne" une direction pour la mettre selon une nouvelle base ==
+		//======================================================================================================================
 		public Vector3 transformToNewONBase(Vector3 dir, OrthonormalBase newBase)
 		{
 			return Vector3.Add(Vector3.Add(Vector3.Multiply(dir.X, newBase.x), Vector3.Multiply(dir.Y, newBase.y)), Vector3.Multiply(dir.Z, newBase.z));
 		}
 
+		//======================================================================================================================
+		//==            AXE ALIGNED BOUNDIND BOX INTERSECT - l'intersection rayon/boite englobante                            ==
+		//======================================================================================================================
 		public bool AABBoxIntersect(AABBox box, Ray r)
 		{
 			float txmin = (box.pmin.X - r.point.X) / r.direction.X;
@@ -256,6 +292,9 @@ namespace Synthese_Image
 			return true;
 		}
 
+		//======================================================================================================================
+		//==            INTERSECT TREE - test l'intersection du rayon r avec un arbre de boîtes englobantes                   ==
+		//======================================================================================================================
 		public ResIntersect intersectTree(AABBTree tree, Ray r)
 		{
 			ResIntersect res;
