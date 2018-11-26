@@ -15,24 +15,26 @@ namespace Synthese_Image
 		public AABBox(Sphere s)
 		{
 			pmin = new Vector3(s.center.X - s.radius, s.center.Y - s.radius, s.center.Z - s.radius);
+			//Console.WriteLine(pmin.ToString());
 			pmax = new Vector3(s.center.X + s.radius, s.center.Y + s.radius, s.center.Z + s.radius);
+			//Console.WriteLine(pmax.ToString());
 		}
 
 		public AABBox(AABBox b1, AABBox b2)
 		{
 			pmin = b1.pmin;
-			if (pmin.X < b2.pmin.X)
+			if (pmin.X > b2.pmin.X)
 				pmin.X = b2.pmin.X;
-			if (pmin.Y < b2.pmin.Y)
+			if (pmin.Y > b2.pmin.Y)
 				pmin.Y = b2.pmin.Y;
-			if (pmin.Z < b2.pmin.Z)
+			if (pmin.Z > b2.pmin.Z)
 				pmin.Z = b2.pmin.Z;
 			pmax = b1.pmax;
-			if (pmax.X > b2.pmax.X)
+			if (pmax.X < b2.pmax.X)
 				pmax.X = b2.pmax.X;
-			if (pmax.Y > b2.pmax.Y)
+			if (pmax.Y < b2.pmax.Y)
 				pmax.Y = b2.pmax.Y;
-			if (pmax.Z > b2.pmax.Z)
+			if (pmax.Z < b2.pmax.Z)
 				pmax.Z = b2.pmax.Z;
 		}
 	}

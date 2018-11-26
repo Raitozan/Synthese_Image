@@ -27,7 +27,7 @@ namespace Synthese_Image
 			}
 			else
 			{
-				Console.WriteLine(spheres.Count);
+				leaf = false;
 				spheres = spheres.OrderBy(v => v.center.X).ToList();
 				
 				box = new AABBox(spheres[0]);

@@ -56,7 +56,7 @@ namespace Synthese_Image
 		{
 			Vector3 color = new Vector3(0, 0, 0);
 
-			if (rebound != 2)
+			if (rebound != 5)
 			{
 				ResIntersect resInter = Intersects(ray);
 				if (resInter.t != -1)
